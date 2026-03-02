@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>П’ятнашки - Гра</title>
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --bg: #f0f2f5;
+            --text: #2d3436;
+            --card-bg: rgba(255, 255, 255, 0.9);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            color: var(--text);
+        }
+
+        #app {
+            width: 100%;
+            max-width: 500px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        h1 {
+            color: white;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+            font-size: 2rem;
+        }
+
+        /* Character Selection */
+        .char-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            width: 100%;
+        }
+
+        .char-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .char-card:active { transform: scale(0.95); }
+
+        .char-card img {
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: cover;
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+
+        /* Difficulty Selection */
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .btn {
+            background: white;
+            border: none;
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--primary);
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        /* Game Board */
+        #game-container {
+            width: 100vw;
+            max-width: 400px;
+            aspect-ratio: 1;
+            background: rgba(0,0,0,0.1);
+            padding: 5px;
+            border-radius: 8px;
+            display: grid;
+            gap: 2px;
+            position: relative;
+        }
+
+        .tile {
+            width: 100%;
+            height: 100%;
+            background-repeat: no-repeat;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: rgba(255,255,255,0.8);
+            text-shadow: 1px 1px 2px black;
+            font-size: 1.2rem;
+            transition: transform 0.1s ease;
+        }
+
+        .tile.empty {
+            background: transparent !important;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+        }
+
+        /* Win Modal */
+        #win-msg {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            display: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            z-index: 100;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <div id="screen-char" class="screen active">
+        <h1>Обери героя</h1>
+        <div class="char-grid">
+            <div class="char-card" onclick="selectHero('Tito.png')">
+                <img src="Tito.png" alt="Tito">
+                <span>Tito</span>
+            </div>
+            <div class="char-card" onclick="selectHero('Smartik.png')">
+                <img src="Smartik.png" alt="Smartik">
+                <span>Smartik</span>
+            </div>
+            <div class="char-card" onclick="selectHero('Junior.png')">
+                <img src="Junior.png" alt="Junior">
+                <span>Junior</span>
+            </div>
+            <div class="char-card" onclick="selectHero('Fil.png')">
+                <img src="Fil.png" alt="Fil">
+                <span>Fil</span>
+            </div>
+            <div class="char-card" onclick="selectHero('Milka.png')" style="grid-column: span 2;">
+                <img src="Milka.png" alt="Milka" style="max-height: 150px;">
+                <span>Milka</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-diff" class="screen">
+        <h1>Складність</h1>
+        <div class="btn-group">
+            <button class="btn" onclick="startGame(3)">Легка (3×3)</button>
+            <button class="btn" onclick="startGame(4)">Середня (4×4)</button>
+            <button class="btn" onclick="startGame(5)">Складна (5×5)</button>
+        </div>
+    </div>
+
+    <div id="screen-game" class="screen">
+        <h1 id="game-title">Збирай!</h1>
+        <div id="game-container"></div>
+        <button class="btn" style="margin-top: 30px; width: 100%;" onclick="location.reload()">На головну</button>
+    </div>
+</div>
+
+<div id="win-msg">
+    <h2 style="color: #27ae60; font-size: 2rem;">🎉 Виграно!</h2>
+    <button class="btn" onclick="location.reload()">Грати знову</button>
+</div>
+
+<script>
+    let selectedHero = '';
+    let gridSize = 3;
+    let tiles = []; // Array of indices
+
+    function selectHero(img) {
+        selectedHero = img;
+        document.getElementById('screen-char').classList.remove('active');
+        document.getElementById('screen-diff').classList.add('active');
+    }
+
+    function startGame(size) {
+        gridSize = size;
+        document.getElementById('screen-diff').classList.remove('active');
+        document.getElementById('screen-game').classList.add('active');
+        initGame();
+    }
+
+    function initGame() {
+        const container = document.getElementById('game-container');
+        container.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+        
+        // Generate solved state
+        tiles = Array.from({length: gridSize * gridSize}, (_, i) => i);
+        
+        // Shuffle (random valid moves to ensure solvability)
+        shuffleTiles();
+        renderBoard();
+    }
+
+    function shuffleTiles() {
+        let shuffleSteps = gridSize * gridSize * 30; 
+        let emptyIdx = tiles.indexOf(tiles.length - 1);
+
+        for (let i = 0; i < shuffleSteps; i++) {
+            const neighbors = getNeighbors(emptyIdx);
+            const moveIdx = neighbors[Math.floor(Math.random() * neighbors.length)];
+            [tiles[emptyIdx], tiles[moveIdx]] = [tiles[moveIdx], tiles[emptyIdx]];
+            emptyIdx = moveIdx;
+        }
+    }
+
+    function getNeighbors(idx) {
+        const res = [];
+        const row = Math.floor(idx / gridSize);
+        const col = idx % gridSize;
+
+        if (row > 0) res.push(idx - gridSize);
+        if (row < gridSize - 1) res.push(idx + gridSize);
+        if (col > 0) res.push(idx - 1);
+        if (col < gridSize - 1) res.push(idx + 1);
+        return res;
+    }
+
+    function renderBoard() {
+        const container = document.getElementById('game-container');
+        container.innerHTML = '';
+        
+        tiles.forEach((tileValue, currentIndex) => {
+            const tile = document.createElement('div');
+            tile.className = 'tile';
+            
+            if (tileValue === gridSize * gridSize - 1) {
+                tile.classList.add('empty');
+            } else {
+                tile.style.backgroundImage = `url('${selectedHero}')`;
+                tile.style.backgroundSize = `${gridSize * 100}% ${gridSize * 100}%`;
+                
+                // Calculate correct background position based on initial value
+                const correctRow = Math.floor(tileValue / gridSize);
+                const correctCol = tileValue % gridSize;
+                tile.style.backgroundPosition = `${(correctCol / (gridSize - 1)) * 100}% ${(correctRow / (gridSize - 1)) * 100}%`;
+                
+                tile.onclick = () => moveTile(currentIndex);
+            }
+            container.appendChild(tile);
+        });
+    }
+
+    function moveTile(idx) {
+        const emptyIdx = tiles.indexOf(gridSize * gridSize - 1);
+        const neighbors = getNeighbors(idx);
+
+        if (neighbors.includes(emptyIdx)) {
+            [tiles[idx], tiles[emptyIdx]] = [tiles[emptyIdx], tiles[idx]];
+            renderBoard();
+            checkWin();
+        }
+    }
+
+    function checkWin() {
+        const isWin = tiles.every((val, i) => val === i);
+        if (isWin) {
+            document.getElementById('win-msg').style.display = 'block';
+        }
+    }
+</script>
+
+</body>
+</html>
