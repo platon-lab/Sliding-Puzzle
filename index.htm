@@ -3,49 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>П’ятнашки - Гра</title>
+    <title>П’ятнашки — Мега Оновлення</title>
     <style>
         :root {
-            --primary: #6c5ce7;
-            --bg: #f0f2f5;
-            --text: #2d3436;
-            --card-bg: rgba(255, 255, 255, 0.9);
+            --primary: #ff7675;
+            --secondary: #6c5ce7;
+            --accent: #00cec9;
+            --bg-dark: #0f0c1b;
+            --card-bg: rgba(255, 255, 255, 0.08);
+            --text-light: #f5f6fa;
         }
 
         * {
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Montserrat', 'Segoe UI', Roboto, sans-serif;
+            user-select: none;
         }
 
         body {
             margin: 0;
             padding: 0;
-            background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%);
+            background: radial-gradient(circle at center, #2d3436 0%, var(--bg-dark) 100%);
             height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             overflow: hidden;
-            color: var(--text);
+            color: var(--text-light);
         }
 
         #app {
             width: 100%;
-            max-width: 500px;
+            max-width: 480px;
             height: 100%;
             display: flex;
             flex-direction: column;
             padding: 20px;
+            position: relative;
         }
 
         .screen {
             display: none;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
             height: 100%;
-            animation: fadeIn 0.4s ease;
+            animation: slideIn 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+            padding: 10px 0;
         }
 
         .screen.active {
@@ -53,201 +58,448 @@
         }
 
         h1 {
-            color: white;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            margin-bottom: 30px;
-            font-size: 2rem;
+            font-size: 2.2rem;
+            font-weight: 800;
+            text-align: center;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 10px 0;
+            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
         }
 
-        /* Character Selection */
+        .subtitle {
+            color: #b2bec3;
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        /* Універсальний контейнер для прокрутки */
+        .scroll-container {
+            width: 100%;
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 5px;
+            margin-bottom: 15px;
+        }
+
+        .scroll-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        .scroll-container::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.02);
+            border-radius: 10px;
+        }
+        .scroll-container::-webkit-scrollbar-thumb {
+            background: linear-gradient(var(--primary), var(--secondary));
+            border-radius: 10px;
+        }
+
+        /* Сітка Героїв */
         .char-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
             width: 100%;
         }
 
         .char-card {
             background: var(--card-bg);
-            border-radius: 15px;
-            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 8px;
             text-align: center;
             cursor: pointer;
-            transition: transform 0.2s;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
         }
 
-        .char-card:active { transform: scale(0.95); }
+        .char-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: 0 8px 20px rgba(255, 118, 117, 0.3);
+        }
+
+        .char-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 50%; height: 100%;
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.15), transparent);
+            transform: skewX(-25deg);
+            transition: 0.7s;
+        }
+
+        .char-card:hover::before {
+            left: 150%;
+        }
 
         .char-card img {
             width: 100%;
             aspect-ratio: 1;
             object-fit: cover;
-            border-radius: 10px;
-            margin-bottom: 8px;
+            border-radius: 12px;
+            margin-bottom: 6px;
+            background: rgba(0, 0, 0, 0.2);
         }
 
-        /* Difficulty Selection */
+        .char-card span {
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: block;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        /* Кнопки вибору складності */
         .btn-group {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 16px;
             width: 100%;
+            justify-content: center;
+            flex: 1;
         }
 
         .btn {
-            background: white;
+            background: linear-gradient(135deg, var(--secondary) 0%, #4a36b3 100%);
             border: none;
-            padding: 20px;
-            border-radius: 12px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: var(--primary);
+            padding: 18px 25px;
+            border-radius: 16px;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: white;
             cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 6px 15px rgba(108, 92, 231, 0.4);
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        /* Game Board */
-        #game-container {
-            width: 100vw;
-            max-width: 400px;
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(108, 92, 231, 0.6);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn-back {
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: none;
+            margin-top: 15px;
+            width: 100%;
+            justify-content: center;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .btn-back:hover {
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: none;
+        }
+
+        /* Ігрова статистика */
+        .stats-bar {
+            display: flex;
+            width: 100%;
+            justify-content: space-around;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 12px;
+            border-radius: 16px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #b2bec3;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--accent);
+        }
+
+        /* Ігрове поле */
+        #game-board-wrapper {
+            width: 100%;
             aspect-ratio: 1;
-            background: rgba(0,0,0,0.1);
-            padding: 5px;
-            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 8px;
+            border-radius: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #game-container {
+            width: 100%;
+            height: 100%;
             display: grid;
-            gap: 2px;
-            position: relative;
+            gap: 4px;
         }
 
         .tile {
             width: 100%;
             height: 100%;
             background-repeat: no-repeat;
-            border-radius: 4px;
+            border-radius: 10px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
-            color: rgba(255,255,255,0.8);
-            text-shadow: 1px 1px 2px black;
-            font-size: 1.2rem;
-            transition: transform 0.1s ease;
+            font-weight: 800;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 10px rgba(0,0,0,0.5);
+            font-size: 1.4rem;
+            box-shadow: inset 0 0 15px rgba(255,255,255,0.15), 0 4px 8px rgba(0,0,0,0.3);
+            transition: transform 0.15s cubic-bezier(0.25, 1, 0.5, 1);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .tile:active {
+            transform: scale(0.95);
         }
 
         .tile.empty {
-            background: transparent !important;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+            background: rgba(0, 0, 0, 0.5) !important;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+            border: none;
+            cursor: default;
         }
 
-        /* Win Modal */
-        #win-msg {
+        /* Модалка виграшу */
+        .overlay {
             position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 30px;
-            border-radius: 20px;
-            text-align: center;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(15, 12, 27, 0.85);
+            backdrop-filter: blur(8px);
             display: none;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+        #win-msg {
+            background: linear-gradient(135deg, #1e1b36 0%, #110e24 100%);
+            padding: 40px 30px;
+            border-radius: 28px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            border: 2px solid var(--accent);
+            max-width: 400px;
+            width: 100%;
+            animation: popUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        #win-msg h2 {
+            font-size: 2.5rem;
+            margin: 0 0 10px 0;
+            background: linear-gradient(45deg, #00cec9, #81ecec);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .win-stats {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        .win-stats p {
+            margin: 8px 0;
+            font-size: 1.1rem;
+            color: #dfe4ea;
+        }
+
+        /* Анімації */
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes popUp {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
         }
     </style>
 </head>
 <body>
 
 <div id="app">
+    <!-- Екран вибору героя -->
     <div id="screen-char" class="screen active">
-        <h1>Обери героя</h1>
-        <div class="char-grid">
-            <div class="char-card" onclick="selectHero('Tito.png')">
-                <img src="Tito.png" alt="Tito">
-                <span>Tito</span>
-            </div>
-            <div class="char-card" onclick="selectHero('Smartik.png')">
-                <img src="Smartik.png" alt="Smartik">
-                <span>Smartik</span>
-            </div>
-            <div class="char-card" onclick="selectHero('Junior.png')">
-                <img src="Junior.png" alt="Junior">
-                <span>Junior</span>
-            </div>
-            <div class="char-card" onclick="selectHero('Fil.png')">
-                <img src="Fil.png" alt="Fil">
-                <span>Fil</span>
-            </div>
-            <div class="char-card" onclick="selectHero('Milka.png')" style="grid-column: span 2;">
-                <img src="Milka.png" alt="Milka" style="max-height: 150px;">
-                <span>Milka</span>
-            </div>
-            <div class="char-card" onclick="selectHero('Bark.png')" style="grid-column: span 2;">
-                <img src="Bark.png" alt="Bark" style="max-height: 150px;">
-                <span>Bark</span>
+        <div>
+            <h1>Обери Героя</h1>
+            <div class="subtitle">Оновлена колекція: 22 унікальних персонажа</div>
+        </div>
+        
+        <div class="scroll-container">
+            <div class="char-grid" id="heroes-mesh">
+                <!-- Генерується через JS -->
             </div>
         </div>
     </div>
 
+    <!-- Екран вибору складності -->
     <div id="screen-diff" class="screen">
-        <h1>Складність</h1>
+        <div>
+            <h1>Рівень Складності</h1>
+            <div class="subtitle">Оберіть розмір ігрової матриці</div>
+        </div>
+        
         <div class="btn-group">
-            <button class="btn" onclick="startGame(3)">Легка (3×3)</button>
-            <button class="btn" onclick="startGame(4)">Середня (4×4)</button>
-            <button class="btn" onclick="startGame(5)">Складна (5×5)</button>
+            <button class="btn" onclick="startGame(3)">
+                <span>Легкий (3 × 3)</span> <span>🧩</span>
+            </button>
+            <button class="btn" onclick="startGame(4)">
+                <span>Середній (4 × 4)</span> <span>🔥</span>
+            </button>
+            <button class="btn" onclick="startGame(5)">
+                <span>Складний (5 × 5)</span> <span>💀</span>
+            </button>
+            
+            <button class="btn btn-back" onclick="navigate('screen-char')">◀ Змінити героя</button>
         </div>
     </div>
 
+    <!-- Ігровий екран -->
     <div id="screen-game" class="screen">
-        <h1 id="game-title">Збирай!</h1>
-        <div id="game-container"></div>
-        <button class="btn" style="margin-top: 30px; width: 100%;" onclick="location.reload()">На головну</button>
+        <div>
+            <h1 id="game-title">Збери пазл</h1>
+            <div class="subtitle" id="playing-hero-name">Герой: ...</div>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-label">⏱ Час</div>
+                <div class="stat-value" id="timer-val">00:00</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">👟 Кроки</div>
+                <div class="stat-value" id="moves-val">0</div>
+            </div>
+        </div>
+
+        <div id="game-board-wrapper">
+            <div id="game-container"></div>
+        </div>
+
+        <button class="btn btn-back" onclick="location.reload()">🗙 Здатися</button>
     </div>
 </div>
 
-<div id="win-msg">
-    <h2 style="color: #27ae60; font-size: 2rem;">🎉 Виграно!</h2>
-    <button class="btn" onclick="location.reload()">Грати знову</button>
+<!-- Модалка перемоги -->
+<div class="overlay" id="win-overlay">
+    <div id="win-msg">
+        <h2>🎉 ПЕРЕМОГА!</h2>
+        <div class="win-stats">
+            <p>Час гри: <strong id="final-time" style="color: var(--accent);">00:00</strong></p>
+            <p>Всього кроків: <strong id="final-moves" style="color: var(--primary);">0</strong></p>
+        </div>
+        <button class="btn" style="width: 100%; justify-content: center;" onclick="location.reload()">Грати Знову 🔄</button>
+    </div>
 </div>
 
 <script>
+    // Масив усіх героїв (6 початкових + 16 нових за запитом)
+    const heroesList = [
+        'Tito', 'Smartik', 'Junior', 'Fil', 'Milka', 'Bark',
+        'Persik', 'Spike', 'Alyonka', 'Lilu', 'Manya', 'Liza', 
+        'Grivna', 'Ben', 'Goldi', 'Raf', 'Veles', 'Masha', 
+        'Brilliantik', 'Richik', 'Shunya', 'Baks'
+    ];
+
     let selectedHero = '';
     let gridSize = 3;
-    let tiles = []; // Array of indices
+    let tiles = []; 
+    
+    // Геймплейна статистика
+    let movesCount = 0;
+    let timerInterval = null;
+    let secondsElapsed = 0;
 
-    function selectHero(img) {
+    // Ініціалізація вибору персонажів
+    function buildCharacterGrid() {
+        const mesh = document.getElementById('heroes-mesh');
+        mesh.innerHTML = '';
+        
+        heroesList.forEach(hero => {
+            const card = document.createElement('div');
+            card.className = 'char-card';
+            card.onclick = () => selectHero(`${hero}.png`, hero);
+            
+            card.innerHTML = `
+                <img src="${hero}.png" alt="${hero}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\'><rect width=\'100%\' height=\'100%\' fill=\'%23333\'/><text x=\'50%\' y=\'55%\' font-size=\'12\' fill=\'%23fff\' text-anchor=\'middle\'>${hero}</text></svg>';">
+                <span>${hero}</span>
+            `;
+            mesh.appendChild(card);
+        });
+    }
+
+    function navigate(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+    }
+
+    function selectHero(img, name) {
         selectedHero = img;
-        document.getElementById('screen-char').classList.remove('active');
-        document.getElementById('screen-diff').classList.add('active');
+        document.getElementById('playing-hero-name').innerText = `Герой: ${name}`;
+        navigate('screen-diff');
     }
 
     function startGame(size) {
         gridSize = size;
-        document.getElementById('screen-diff').classList.remove('active');
-        document.getElementById('screen-game').classList.add('active');
+        navigate('screen-game');
         initGame();
     }
 
     function initGame() {
+        movesCount = 0;
+        secondsElapsed = 0;
+        document.getElementById('moves-val').innerText = movesCount;
+        document.getElementById('timer-val').innerText = "00:00";
+        
+        clearInterval(timerInterval);
+        timerInterval = setInterval(updateTimer, 1000);
+
         const container = document.getElementById('game-container');
         container.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
         
-        // Generate solved state
+        // Початковий зібраний стан
         tiles = Array.from({length: gridSize * gridSize}, (_, i) => i);
         
-        // Shuffle (random valid moves to ensure solvability)
+        // Перемішування через валідні ходи (гарантує розв'язність)
         shuffleTiles();
         renderBoard();
     }
 
+    function updateTimer() {
+        secondsElapsed++;
+        const mins = String(Math.floor(secondsElapsed / 60)).padStart(2, '0');
+        const secs = String(secondsElapsed % 60).padStart(2, '0');
+        document.getElementById('timer-val').innerText = `${mins}:${secs}`;
+    }
+
     function shuffleTiles() {
-        let shuffleSteps = gridSize * gridSize * 30; 
+        let shuffleSteps = gridSize * gridSize * 40; 
         let emptyIdx = tiles.indexOf(tiles.length - 1);
 
         for (let i = 0; i < shuffleSteps; i++) {
@@ -284,10 +536,12 @@
                 tile.style.backgroundImage = `url('${selectedHero}')`;
                 tile.style.backgroundSize = `${gridSize * 100}% ${gridSize * 100}%`;
                 
-                // Calculate correct background position based on initial value
                 const correctRow = Math.floor(tileValue / gridSize);
                 const correctCol = tileValue % gridSize;
                 tile.style.backgroundPosition = `${(correctCol / (gridSize - 1)) * 100}% ${(correctRow / (gridSize - 1)) * 100}%`;
+                
+                // Текст цифри на плитці для підказки та зручності
+                tile.innerText = tileValue + 1;
                 
                 tile.onclick = () => moveTile(currentIndex);
             }
@@ -301,6 +555,9 @@
 
         if (neighbors.includes(emptyIdx)) {
             [tiles[idx], tiles[emptyIdx]] = [tiles[emptyIdx], tiles[idx]];
+            movesCount++;
+            document.getElementById('moves-val').innerText = movesCount;
+            
             renderBoard();
             checkWin();
         }
@@ -309,9 +566,15 @@
     function checkWin() {
         const isWin = tiles.every((val, i) => val === i);
         if (isWin) {
-            document.getElementById('win-msg').style.display = 'block';
+            clearInterval(timerInterval);
+            document.getElementById('final-time').innerText = document.getElementById('timer-val').innerText;
+            document.getElementById('final-moves').innerText = movesCount;
+            document.getElementById('win-overlay').style.display = 'flex';
         }
     }
+
+    // Старт роботи додатку
+    buildCharacterGrid();
 </script>
 
 </body>
